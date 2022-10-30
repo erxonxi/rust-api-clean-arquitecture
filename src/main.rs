@@ -3,7 +3,7 @@ mod internal;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use serde::Deserialize;
 
-use crate::internal::user::{UserRepository, UserId, UserEmail, UserPassword, User};
+use crate::internal::user::{User, UserEmail, UserId, UserPassword, UserRepository};
 use internal::plataform::storge::mongo::MongoClientFactory;
 use internal::plataform::storge::user_repository::MongoUserRepository;
 
