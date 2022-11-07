@@ -3,13 +3,34 @@ use crate::{
     rest::RestContainer,
 };
 use actix_web::{web, HttpResponse, Responder};
+use serde::Deserialize;
 
-pub async fn create_user(data: web::Data<RestContainer>) -> impl Responder {
-    let id = UserId::new("67e55044-10b1-426f-9247-bb680e5fe0c8".into());
-    let email = UserEmail::new("rubenruizpedreira@gmail.com".into());
-    let password = UserPassword::new("6284349".into());
-    data.create_user
-        .run(id.unwrap(), email.unwrap(), password)
-        .await;
+#[derive(Debug, Deserialize)]
+pub struct CreateUserBody {
+    id: String,
+    email: String,
+    password: String,
+}
+
+pub async fn create_user(
+    data: web::Data<RestContainer>,
+    body: web::Json<CreateUserBody>,
+) -> impl Responder {
+    match UserId::new(body.id.to_string()) {
+        Ok(id) => match UserEmail::new(body.email.to_string()) {
+            Ok(email) => {
+                let password = UserPassword::new(body.password.to_string());
+                match data.create_user.run(id, email, password).await {
+                    Err(_) => {
+                        return HttpResponse::InternalServerError().json("Internal server error")
+                    }
+                    _ => (),
+                }
+            }
+            Err(_) => return HttpResponse::NotAcceptable().json("Invalid user email"),
+        },
+        Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
+    }
+
     HttpResponse::Ok().json("Ok")
 }
