@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:5.0.0
+    # volumes:
+    #   - ./data/mongo:/data/db:delegated
+    ports:
+      - 27017:27017
+
+volumes:
+  node_modules:
+  esdata:
+    driver: local

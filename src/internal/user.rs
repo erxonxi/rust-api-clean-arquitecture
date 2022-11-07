@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use async_trait::async_trait;
 use regex::Regex;
 use uuid::Uuid;
@@ -20,6 +22,10 @@ impl UserId {
         } else {
             Err(ErrorsUserId::InvalidUuid)
         }
+    }
+
+    pub fn random() {
+        Self { value: Uuid::new_v4().to_string() };
     }
 }
 
@@ -78,10 +84,8 @@ impl User {
 pub enum ErrorsUserRepository {
     ErrorOnSave,
 }
-
 #[async_trait]
-pub trait UserRepository<'a, T> {
-    fn new(client: &'a T) -> Self;
+pub trait UserRepository: Send + Sync + Debug {
     async fn save(&self, user: User) -> Result<(), ErrorsUserRepository>;
 }
 
