@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use mongodb::bson::Document;
 use regex::Regex;
+use serde::{Serialize, Deserialize};
 use std::fmt::Debug;
 use uuid::Uuid;
 
@@ -72,6 +73,13 @@ pub struct User {
     pub password: UserPassword,
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct UserPrimitives {
+    pub id: String,
+    pub email: String,
+    pub password: String
+}
+
 impl User {
     pub fn new(id: UserId, email: UserEmail, password: UserPassword) -> Self {
         Self {
@@ -87,6 +95,10 @@ impl User {
             email: UserEmail::new(doc.get("email").unwrap().to_string()).unwrap(),
             password: UserPassword::new(doc.get("password").unwrap().to_string())
         }
+    }
+
+    pub fn to_primitives(&self) -> UserPrimitives {
+        UserPrimitives { id: self.id.value.to_string(), email: self.email.value.to_string(), password: self.password.value.to_string() }
     }
 }
 
