@@ -5,9 +5,7 @@ pub enum ErrorsMongo {
     NotConected,
 }
 
-pub struct MongoClientFactory {
-    url: String,
-}
+pub struct MongoClientFactory {}
 
 impl MongoClientFactory {
     pub async fn new(url: String) -> Result<Client, ErrorsMongo> {

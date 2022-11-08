@@ -24,3 +24,22 @@ impl CreateUser {
         self.repository.save(user).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::internal::user::mothers::UserMother;
+    use crate::internal::user::mocks::MockUserRepository;
+
+    #[actix_rt::test]
+    async fn create_user_valid_data() {
+        let mock = MockUserRepository::new();
+        let user = UserMother::random();
+        let service = CreateUser::new(Arc::new(mock));
+
+        assert_eq!(
+            Ok(()),
+            service.run(user.id, user.email, user.password).await
+        );
+    }
+}

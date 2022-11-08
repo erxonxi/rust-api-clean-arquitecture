@@ -1,7 +1,7 @@
-use std::fmt::Debug;
-
 use async_trait::async_trait;
+use mongodb::bson::Document;
 use regex::Regex;
+use std::fmt::Debug;
 use uuid::Uuid;
 
 #[derive(Debug, PartialEq)]
@@ -9,7 +9,7 @@ pub enum ErrorsUserId {
     InvalidUuid,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct UserId {
     pub value: String,
 }
@@ -24,8 +24,10 @@ impl UserId {
         }
     }
 
-    pub fn random() {
-        Self { value: Uuid::new_v4().to_string() };
+    pub fn _random() -> Self {
+        Self {
+            value: Uuid::new_v4().to_string(),
+        }
     }
 }
 
@@ -34,7 +36,7 @@ pub enum ErrorsUserEmail {
     Invalid,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct UserEmail {
     pub value: String,
 }
@@ -52,7 +54,7 @@ impl UserEmail {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct UserPassword {
     pub value: String,
 }
@@ -63,7 +65,7 @@ impl UserPassword {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct User {
     pub id: UserId,
     pub email: UserEmail,
@@ -78,15 +80,74 @@ impl User {
             password,
         }
     }
+
+    pub fn from_doc(doc: Document) -> Self {
+        Self {
+            id: UserId::new(doc.get("_id").unwrap().to_string()).unwrap(),
+            email: UserEmail::new(doc.get("email").unwrap().to_string()).unwrap(),
+            password: UserPassword::new(doc.get("password").unwrap().to_string())
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
 pub enum ErrorsUserRepository {
     ErrorOnSave,
 }
+
 #[async_trait]
 pub trait UserRepository: Send + Sync + Debug {
     async fn save(&self, user: User) -> Result<(), ErrorsUserRepository>;
+    async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository>;
+}
+
+#[cfg(test)]
+pub mod mothers {
+    use fake::Fake;
+    use fake::faker::internet::en::{Password, FreeEmail};
+
+    use super::*;
+
+    pub struct UserMother {}
+    impl UserMother {
+        pub fn random() -> User {
+            let email = UserEmail::new(FreeEmail().fake());
+            let password = UserPassword::new(Password(10..20).fake());
+            User::new(UserId::_random(), email.unwrap(), password)
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod mocks {
+    use super::{UserRepository, User, ErrorsUserRepository, UserId};
+
+    #[derive(Debug)]
+    pub struct MockUserRepository {
+        fake_db: Vec<User>
+    }
+
+    impl MockUserRepository {
+        pub fn new() -> Self {
+            Self { fake_db: vec![] }
+        }
+
+        pub fn with_db(fake_db: Vec<User>) -> Self {
+            Self { fake_db }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl UserRepository for MockUserRepository {
+        async fn save(&self, _user: User) ->  Result<(), ErrorsUserRepository> {
+            Ok(())
+        }
+
+        async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository> {
+            let user = self.fake_db.iter().find(|&u| {u.id == id}).unwrap();
+            Ok(user.clone())
+        }
+    }
 }
 
 #[cfg(test)]
