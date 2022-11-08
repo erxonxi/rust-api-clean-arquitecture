@@ -28,8 +28,8 @@ impl CreateUser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::internal::user::mothers::UserMother;
     use crate::internal::user::mocks::MockUserRepository;
+    use crate::internal::user::mothers::UserMother;
 
     #[actix_rt::test]
     async fn create_user_valid_data() {

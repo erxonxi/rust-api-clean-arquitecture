@@ -18,7 +18,7 @@ pub async fn build() -> std::io::Result<()> {
         App::new()
             .data(RestContainer {
                 create_user: create_user.to_owned(),
-                get_user: get_user.to_owned()
+                get_user: get_user.to_owned(),
             })
             .wrap(Logger::default())
             .configure(routes)

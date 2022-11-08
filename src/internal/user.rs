@@ -1,7 +1,6 @@
 use async_trait::async_trait;
-use mongodb::bson::Document;
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use uuid::Uuid;
 
@@ -77,7 +76,7 @@ pub struct User {
 pub struct UserPrimitives {
     pub id: String,
     pub email: String,
-    pub password: String
+    pub password: String,
 }
 
 impl User {
@@ -89,16 +88,20 @@ impl User {
         }
     }
 
-    pub fn from_doc(doc: Document) -> Self {
+    pub fn from_primitives(user: UserPrimitives) -> Self {
         Self {
-            id: UserId::new(doc.get("_id").unwrap().to_string()).unwrap(),
-            email: UserEmail::new(doc.get("email").unwrap().to_string()).unwrap(),
-            password: UserPassword::new(doc.get("password").unwrap().to_string())
+            id: UserId::new(user.id).unwrap(),
+            email: UserEmail::new(user.email).unwrap(),
+            password: UserPassword::new(user.password),
         }
     }
 
     pub fn to_primitives(&self) -> UserPrimitives {
-        UserPrimitives { id: self.id.value.to_string(), email: self.email.value.to_string(), password: self.password.value.to_string() }
+        UserPrimitives {
+            id: self.id.value.to_string(),
+            email: self.email.value.to_string(),
+            password: self.password.value.to_string(),
+        }
     }
 }
 
@@ -115,8 +118,8 @@ pub trait UserRepository: Send + Sync + Debug {
 
 #[cfg(test)]
 pub mod mothers {
+    use fake::faker::internet::en::{FreeEmail, Password};
     use fake::Fake;
-    use fake::faker::internet::en::{Password, FreeEmail};
 
     use super::*;
 
@@ -132,11 +135,11 @@ pub mod mothers {
 
 #[cfg(test)]
 pub mod mocks {
-    use super::{UserRepository, User, ErrorsUserRepository, UserId};
+    use super::{ErrorsUserRepository, User, UserId, UserRepository};
 
     #[derive(Debug)]
     pub struct MockUserRepository {
-        fake_db: Vec<User>
+        fake_db: Vec<User>,
     }
 
     impl MockUserRepository {
@@ -151,12 +154,12 @@ pub mod mocks {
 
     #[async_trait::async_trait]
     impl UserRepository for MockUserRepository {
-        async fn save(&self, _user: User) ->  Result<(), ErrorsUserRepository> {
+        async fn save(&self, _user: User) -> Result<(), ErrorsUserRepository> {
             Ok(())
         }
 
         async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository> {
-            let user = self.fake_db.iter().find(|&u| {u.id == id}).unwrap();
+            let user = self.fake_db.iter().find(|&u| u.id == id).unwrap();
             Ok(user.clone())
         }
     }

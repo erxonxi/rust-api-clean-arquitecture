@@ -37,21 +37,18 @@ pub async fn create_user(
 
 #[derive(Debug, Deserialize)]
 pub struct GetUserPath {
-    id: String
+    id: String,
 }
 
 pub async fn get_user(
     data: web::Data<RestContainer>,
-    path: web::Path<GetUserPath>
+    path: web::Path<GetUserPath>,
 ) -> impl Responder {
     match UserId::new(path.id.to_string()) {
-        Ok(id) => {
-            match data.get_user.run(id).await {
-                Ok(user) => return HttpResponse::Ok().json(user.to_primitives()),
-                Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id")
-            }
-        }
-        Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id")
+        Ok(id) => match data.get_user.run(id).await {
+            Ok(user) => return HttpResponse::Ok().json(user.to_primitives()),
+            Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
+        },
+        Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
     }
 }
-

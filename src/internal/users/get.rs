@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use crate::internal::user::{
-    ErrorsUserRepository, User, UserId, UserRepository,
-};
+use crate::internal::user::{ErrorsUserRepository, User, UserId, UserRepository};
 
 #[derive(Clone, Debug)]
 pub struct GetUser {
