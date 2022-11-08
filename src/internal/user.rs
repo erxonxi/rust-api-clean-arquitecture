@@ -108,12 +108,14 @@ impl User {
 #[derive(Debug, PartialEq)]
 pub enum ErrorsUserRepository {
     ErrorOnSave,
+    UserNotFound,
 }
 
 #[async_trait]
 pub trait UserRepository: Send + Sync + Debug {
     async fn save(&self, user: User) -> Result<(), ErrorsUserRepository>;
     async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository>;
+    async fn delete(&self, id: UserId) -> Result<(), ErrorsUserRepository>;
 }
 
 #[cfg(test)]
@@ -161,6 +163,10 @@ pub mod mocks {
         async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository> {
             let user = self.fake_db.iter().find(|&u| u.id == id).unwrap();
             Ok(user.clone())
+        }
+
+        async fn delete(&self, id: UserId) -> Result<(), ErrorsUserRepository> {
+            Ok(())
         }
     }
 }

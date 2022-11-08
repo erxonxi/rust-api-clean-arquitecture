@@ -1,36 +1,31 @@
 use async_trait::async_trait;
 use bson::{doc, Document};
-use mongodb::{bson, Client};
+use mongodb::{bson, Collection};
 
 use super::mongo::MongoClientFactory;
 use crate::internal::user::{ErrorsUserRepository, User, UserId, UserPrimitives, UserRepository};
 
 #[derive(Debug)]
 pub struct MongoUserRepository {
-    client: Client,
+    collection: Collection<Document>,
 }
 
 impl MongoUserRepository {
-    pub fn new(client: Client) -> Self {
-        Self { client }
-    }
-
     pub async fn factory() -> Self {
         let client = MongoClientFactory::new("mongodb://localhost:27017".into())
             .await
             .unwrap();
-        Self::new(client)
+        let collection = client.database("rust-mooc").collection::<Document>("users");
+        Self { collection }
     }
 }
 
 #[async_trait]
 impl UserRepository for MongoUserRepository {
     async fn save(&self, user: User) -> Result<(), ErrorsUserRepository> {
-        let db = self.client.database("rust-mooc");
-        let collection = db.collection::<Document>("users");
         let doc =
             doc! {"_id": user.id.value, "email": user.email.value, "password": user.password.value};
-        if collection.insert_one(doc, None).await.is_err() {
+        if self.collection.insert_one(doc, None).await.is_err() {
             Err(ErrorsUserRepository::ErrorOnSave)
         } else {
             Ok(())
@@ -38,9 +33,8 @@ impl UserRepository for MongoUserRepository {
     }
 
     async fn get(&self, id: UserId) -> Result<User, ErrorsUserRepository> {
-        let db = self.client.database("rust-mooc");
-        let collection = db.collection::<Document>("users");
-        if let Ok(doc) = collection
+        if let Ok(doc) = self
+            .collection
             .find_one(
                 doc! {
                       "_id": &id.value
@@ -56,7 +50,20 @@ impl UserRepository for MongoUserRepository {
                 password: user_doc.get_str("password").unwrap().to_string(),
             }))
         } else {
-            Err(ErrorsUserRepository::ErrorOnSave)
+            Err(ErrorsUserRepository::UserNotFound)
+        }
+    }
+
+    async fn delete(&self, id: UserId) -> Result<(), ErrorsUserRepository> {
+        if self
+            .collection
+            .delete_one(doc! { "_id": id.value }, None)
+            .await
+            .is_err()
+        {
+            Err(ErrorsUserRepository::UserNotFound)
+        } else {
+            Ok(())
         }
     }
 }
