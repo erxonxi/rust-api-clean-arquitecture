@@ -16,10 +16,10 @@ pub async fn build() -> std::io::Result<()> {
     let get_user = GetUser::new(user_repository.clone());
     HttpServer::new(move || {
         App::new()
-            .data(RestContainer {
+            .app_data(web::Data::new(RestContainer {
                 create_user: create_user.to_owned(),
                 get_user: get_user.to_owned(),
-            })
+            }))
             .wrap(Logger::default())
             .configure(routes)
     })
