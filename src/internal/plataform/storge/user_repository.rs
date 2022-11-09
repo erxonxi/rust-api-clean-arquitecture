@@ -17,8 +17,7 @@ impl MongoUserRepository {
     }
 }
 
-impl MongoRepository for MongoUserRepository {
-}
+impl MongoRepository for MongoUserRepository {}
 
 #[async_trait]
 impl UserRepository for MongoUserRepository {

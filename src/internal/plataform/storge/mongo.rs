@@ -1,4 +1,4 @@
-use mongodb::{options::ClientOptions, Client, Collection, bson::Document};
+use mongodb::{bson::Document, options::ClientOptions, Client, Collection};
 
 #[derive(Debug)]
 pub enum ErrorsMongo {
@@ -22,11 +22,15 @@ impl MongoClientFactory {
 
 #[async_trait::async_trait]
 pub trait MongoRepository {
-    async fn get_collection(url: String, database: String, collection: String) -> Collection<Document> {
-        let client = MongoClientFactory::new(url)
-            .await
-            .unwrap();
+    async fn get_collection(
+        url: String,
+        database: String,
+        collection: String,
+    ) -> Collection<Document> {
+        let client = MongoClientFactory::new(url).await.unwrap();
 
-        client.database(&database).collection::<Document>(&collection)
+        client
+            .database(&database)
+            .collection::<Document>(&collection)
     }
 }

@@ -3,6 +3,7 @@ pub mod users;
 
 use std::sync::Arc;
 
+use crate::config::Config;
 use crate::internal::plataform::storge::user_repository::MongoUserRepository;
 use crate::internal::users::create::CreateUser;
 use crate::internal::users::delete::DeleteUser;
@@ -12,14 +13,15 @@ use actix_web::{web, App, HttpServer};
 
 #[actix_rt::main]
 pub async fn build() -> std::io::Result<()> {
-    let user_repository =
-        Arc::new(MongoUserRepository::new("mongodb://localhost:27017".into()).await);
+    let config = Config::env();
+    let user_repository = Arc::new(MongoUserRepository::new(config.mongo_url.to_owned()).await);
     let create_user = CreateUser::new(user_repository.clone());
     let get_user = GetUser::new(user_repository.clone());
     let delete_user = DeleteUser::new(user_repository.clone());
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(RestContainer {
+                _config: config.to_owned(),
                 create_user: create_user.to_owned(),
                 get_user: get_user.to_owned(),
                 delete_user: delete_user.to_owned(),
@@ -44,6 +46,7 @@ fn routes(app: &mut web::ServiceConfig) {
 
 #[derive(Debug)]
 pub struct RestContainer {
+    _config: Config,
     create_user: CreateUser,
     get_user: GetUser,
     delete_user: DeleteUser,
