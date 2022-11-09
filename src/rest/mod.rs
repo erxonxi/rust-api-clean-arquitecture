@@ -11,7 +11,7 @@ use actix_web::{web, App, HttpServer};
 
 #[actix_rt::main]
 pub async fn build() -> std::io::Result<()> {
-    let user_repository = Arc::new(MongoUserRepository::factory().await);
+    let user_repository = Arc::new(MongoUserRepository::new("mongodb://localhost:27017".into()).await);
     let create_user = CreateUser::new(user_repository.clone());
     let get_user = GetUser::new(user_repository.clone());
     HttpServer::new(move || {

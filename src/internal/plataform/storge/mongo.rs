@@ -1,4 +1,4 @@
-use mongodb::{options::ClientOptions, Client};
+use mongodb::{options::ClientOptions, Client, Collection, bson::Document};
 
 #[derive(Debug)]
 pub enum ErrorsMongo {
@@ -6,7 +6,6 @@ pub enum ErrorsMongo {
 }
 
 pub struct MongoClientFactory {}
-
 impl MongoClientFactory {
     pub async fn new(url: String) -> Result<Client, ErrorsMongo> {
         if let Ok(options) = ClientOptions::parse(url).await {
@@ -18,5 +17,16 @@ impl MongoClientFactory {
         } else {
             Err(ErrorsMongo::NotConected)
         }
+    }
+}
+
+#[async_trait::async_trait]
+pub trait MongoRepository {
+    async fn get_collection(url: String, database: String, collection: String) -> Collection<Document> {
+        let client = MongoClientFactory::new(url)
+            .await
+            .unwrap();
+
+        client.database(&database).collection::<Document>(&collection)
     }
 }

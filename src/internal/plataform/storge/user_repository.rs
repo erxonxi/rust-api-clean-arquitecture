@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use bson::{doc, Document};
 use mongodb::{bson, Collection};
 
-use super::mongo::MongoClientFactory;
+use super::mongo::MongoRepository;
 use crate::internal::user::{ErrorsUserRepository, User, UserId, UserPrimitives, UserRepository};
 
 #[derive(Debug)]
@@ -11,13 +11,13 @@ pub struct MongoUserRepository {
 }
 
 impl MongoUserRepository {
-    pub async fn factory() -> Self {
-        let client = MongoClientFactory::new("mongodb://localhost:27017".into())
-            .await
-            .unwrap();
-        let collection = client.database("rust-mooc").collection::<Document>("users");
+    pub async fn new(url: String) -> Self {
+        let collection = Self::get_collection(url, "rust-mooc".into(), "users".into()).await;
         Self { collection }
     }
+}
+
+impl MongoRepository for MongoUserRepository {
 }
 
 #[async_trait]
