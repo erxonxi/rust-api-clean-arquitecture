@@ -36,17 +36,30 @@ pub async fn create_user(
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GetUserPath {
+pub struct IdUserPath {
     id: String,
 }
 
 pub async fn get_user(
     data: web::Data<RestContainer>,
-    path: web::Path<GetUserPath>,
+    path: web::Path<IdUserPath>,
 ) -> impl Responder {
     match UserId::new(path.id.to_string()) {
         Ok(id) => match data.get_user.run(id).await {
             Ok(user) => return HttpResponse::Ok().json(user.to_primitives()),
+            Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
+        },
+        Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
+    }
+}
+
+pub async fn delete_user(
+    data: web::Data<RestContainer>,
+    path: web::Path<IdUserPath>,
+) -> impl Responder {
+    match UserId::new(path.id.to_string()) {
+        Ok(id) => match data.delete_user.run(id).await {
+            Ok(_) => return HttpResponse::Ok().json("User deleted"),
             Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),
         },
         Err(_) => return HttpResponse::NotAcceptable().json("Invalid user id"),

@@ -165,7 +165,7 @@ pub mod mocks {
             Ok(user.clone())
         }
 
-        async fn delete(&self, id: UserId) -> Result<(), ErrorsUserRepository> {
+        async fn delete(&self, _id: UserId) -> Result<(), ErrorsUserRepository> {
             Ok(())
         }
     }
